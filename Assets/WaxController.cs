@@ -9,22 +9,29 @@ public class WaxController : MonoBehaviour
 
     [Space]
     [Header("Movilidad")]
+
     public float speed;
+
     public float jumpForce;
+    public float jumpCounter;
+    private float jumpTime;
+
+    public float dashforce;
+    public float dashCooldown;
+
     private float moveInput;
+
+    [Space]
+    [Header("Ground control")]
     public bool isGrounded;
     public Transform feetPos;
     public float checkRadius;
     public LayerMask whatIsGround;
 
-    private float jumpTimeCounter;
-    public float jumpTime;
-    private bool isJumping;
-
     [Space]
     [Header("Mecanicas")]
 
-    public Vector2 FuerzasMetales; 
+    private Vector2 FuerzasMetales; 
     public Transform metal;
     
     public float steelforce;
@@ -41,40 +48,45 @@ public class WaxController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if(Input.GetButtonDown("Jump") && jumpCounter > 0){
+
+            rb.velocity = new Vector2(rb.velocity.x, jumpForce);
+            jumpCounter--;
+
+        }
         
+
+        if(Input.GetButtonDown("Dash") && dashCooldown <= 0){
+
+            rb.AddForce(Vector2.right * dashforce, ForceMode2D.Impulse);
+            dashCooldown = 3;
+            Debug.Log("Dashing");
+        }               
     }
 
     void FixedUpdate()
     {
+        //MOVIMIENTO LATERAL
+        moveInput = Input.GetAxisRaw("Horizontal");
+        rb.velocity = new Vector2(FuerzasMetales.x + (moveInput * speed * Time.deltaTime), FuerzasMetales.y + rb.velocity.y);
+
             
         //Chequeo suelo
-
         isGrounded = Physics2D.OverlapCircle(feetPos.position, checkRadius, whatIsGround);
-
-
-
-        //MOVIMIENTO
-
-        moveInput = Input.GetAxisRaw("Horizontal");
 
         if(isGrounded == true){
 
-            rb.velocity = new Vector2(FuerzasMetales.x + (moveInput * speed * Time.deltaTime), FuerzasMetales.y + rb.velocity.y);
-
-            if(Input.GetButton("Jump")){
-
-                rb.velocity = new Vector2(rb.velocity.x, jumpForce);
-
-            }
-        }
-        else {
-            
-            rb.velocity = new Vector2(FuerzasMetales.x + (moveInput * speed / 2 * Time.deltaTime), FuerzasMetales.y + rb.velocity.y);
+            jumpCounter = 1;
 
         }
 
+
+        //Cooldowns
+
+        if(dashCooldown > 0){
+            dashCooldown -= Time.deltaTime;
+        } 
         
-
         // MECANICAS ACERO
         
         //distancia al metal
