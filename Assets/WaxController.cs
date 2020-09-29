@@ -6,18 +6,24 @@ public class WaxController : MonoBehaviour
 {
     
     private Rigidbody2D rb;
+    private bool facingRight = true;
 
     [Space]
     [Header("Movilidad")]
 
     public float speed;
 
+    //SALTO
+    private bool canJump = true;
+    private bool jump;
     public float jumpForce;
     public float jumpCounter;
-    private float jumpTime;
 
-    public float dashforce;
-    public float dashCooldown;
+    //DASH
+    private bool canDash = true;
+    private bool dash;
+    public float dashForce;
+    private bool isDashing;
 
     private float moveInput;
 
@@ -40,54 +46,69 @@ public class WaxController : MonoBehaviour
     public float distanciaminima;
     private float factordistancia;
 
-    void Start()
+    void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
     }
 
-    // Update is called once per frame
+
+
     void Update()
     {
-        if(Input.GetButtonDown("Jump") && jumpCounter > 0){
+        
+        moveInput = Input.GetAxisRaw("Horizontal");
 
-            rb.velocity = new Vector2(rb.velocity.x, jumpForce);
-            jumpCounter--;
+        if (moveInput > 0 && !facingRight)
+        {
+            Flip();
+        } else if (moveInput < 0 && facingRight)
+        {
+            Flip();
+        }
 
+        if(Input.GetButtonDown("Jump"))
+        {
+            jump = true;
         }
         
 
-        if(Input.GetButtonDown("Dash") && dashCooldown <= 0){
-
-            rb.AddForce(Vector2.right * dashforce, ForceMode2D.Impulse);
-            dashCooldown = 3;
-            Debug.Log("Dashing");
-        }               
+        if(Input.GetButtonDown("Dash"))
+        {
+            dash = true;
+        }
+        
     }
 
     void FixedUpdate()
-    {
-        //MOVIMIENTO LATERAL
-        moveInput = Input.GetAxisRaw("Horizontal");
-        rb.velocity = new Vector2(FuerzasMetales.x + (moveInput * speed * Time.deltaTime), FuerzasMetales.y + rb.velocity.y);
-
-            
+    { 
+   
         //Chequeo suelo
         isGrounded = Physics2D.OverlapCircle(feetPos.position, checkRadius, whatIsGround);
 
-        if(isGrounded == true){
-
-            jumpCounter = 1;
-
+        if(isGrounded == true)
+        {
+            jumpCounter = 2;
         }
 
-
+        /*
         //Cooldowns
-
-        if(dashCooldown > 0){
+        if(dashCooldown > 0)
+        {
             dashCooldown -= Time.deltaTime;
         } 
-        
+        */
+        Move(moveInput, jump, dash);
+        jump = false;
+        dash = false;
+
+
+        /*
+
+
+
         // MECANICAS ACERO
+        
+
         
         //distancia al metal
         if(distanciaminima > (transform.position - metal.position).magnitude){
@@ -118,10 +139,77 @@ public class WaxController : MonoBehaviour
                 FuerzasMetales = FuerzasMetales * Time.deltaTime;
             }
             
-        }  else {
-
+        }  else
+        {
             FuerzasMetales = new Vector2(0,0); 
         }
 
+
+        */
+
     }
+
+    private void Move(float moveInput, bool jump, bool dash)
+    {
+        rb.velocity = new Vector2(FuerzasMetales.x + (moveInput * speed * Time.fixedDeltaTime), FuerzasMetales.y + rb.velocity.y);
+
+        if (jump)
+        {
+            Jump();
+        }
+
+        if (dash && canDash)
+        {
+            Dash();
+        }
+    }
+
+    private void Jump()
+    {
+        if(canJump)
+        {
+            if (jumpCounter == 2)
+            {
+                //rb.velocity = new Vector2(rb.velocity.x, jumpForce);
+                rb.AddForce(new Vector2(0f, jumpForce));
+                jumpCounter--;
+            }
+            else if (jumpCounter == 1)
+            {
+                rb.velocity = new Vector2(rb.velocity.x, 0f); //Frena la caida
+                rb.AddForce(new Vector2(0f, jumpForce/1.1f)); //Es mas debil al primero
+                jumpCounter--; 
+            }
+        }
+    }
+
+    private void Dash()
+    {
+        StartCoroutine(DashCooldown());
+        if (isDashing)
+        {
+            rb.velocity = new Vector2(transform.localScale.x * dashForce, 0f);
+            //rb.AddForce(new Vector2(dashForce, 0f));
+        }
+    }
+
+    private void Flip()
+    {
+        facingRight = !facingRight;
+		Vector3 theScale = transform.localScale;
+		theScale.x *= -1;
+		transform.localScale = theScale;        
+    }
+
+	IEnumerator DashCooldown()
+	{
+		isDashing = true;
+		canDash = false;
+		yield return new WaitForSeconds(0.1f);
+		isDashing = false;
+		yield return new WaitForSeconds(1f);
+		canDash = true;
+	}
 }
+
+
