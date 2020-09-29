@@ -7,6 +7,7 @@ public class WaxController : MonoBehaviour
     
     private Rigidbody2D rb;
     private bool facingRight = true;
+    private Animator anim;
 
     [Space]
     [Header("Movilidad")]
@@ -49,6 +50,7 @@ public class WaxController : MonoBehaviour
     void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
+        anim = GetComponent<Animator>();
     }
 
 
@@ -64,6 +66,15 @@ public class WaxController : MonoBehaviour
         } else if (moveInput < 0 && facingRight)
         {
             Flip();
+        }
+
+        if (moveInput == 0)
+        {
+            anim.SetBool("isRunning", false);
+        } 
+        else
+        {
+            anim.SetBool("isRunning", true);
         }
 
         if(Input.GetButtonDown("Jump"))
@@ -88,8 +99,12 @@ public class WaxController : MonoBehaviour
         if(isGrounded == true)
         {
             jumpCounter = 2;
+            anim.SetBool("isJumping", false);
         }
-
+        else
+        {
+            anim.SetBool("isJumping", true);
+        }
         /*
         //Cooldowns
         if(dashCooldown > 0)
@@ -168,6 +183,7 @@ public class WaxController : MonoBehaviour
     {
         if(canJump)
         {
+            anim.SetTrigger("takeOff");
             if (jumpCounter == 2)
             {
                 //rb.velocity = new Vector2(rb.velocity.x, jumpForce);
