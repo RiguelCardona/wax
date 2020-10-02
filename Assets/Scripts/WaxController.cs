@@ -59,6 +59,7 @@ public class WaxController : MonoBehaviour
     {
         
         moveInput = Input.GetAxisRaw("Horizontal");
+        anim.SetFloat("runningSpeed", Mathf.Abs(moveInput));
 
         if (moveInput > 0 && !facingRight)
         {
@@ -103,7 +104,10 @@ public class WaxController : MonoBehaviour
         }
         else
         {
-            anim.SetBool("isJumping", true);
+            if (rb.velocity.y > 0)
+            {
+                anim.SetBool("isJumping", true);
+            }
         }
         /*
         //Cooldowns
