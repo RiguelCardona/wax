@@ -7,7 +7,7 @@ public class WaxController : MonoBehaviour
     
     private Rigidbody2D rb;
     private bool facingRight = true;
-    private Animator anim;
+    public Animator anim;
 
     [Space]
     [Header("Movilidad")]
@@ -19,6 +19,8 @@ public class WaxController : MonoBehaviour
     private bool jump;
     public float jumpForce;
     public float jumpCounter;
+    public float jumpTimeCounter;
+    public float jumpTimeLimit;
 
     //DASH
     private bool canDash = true;
@@ -50,7 +52,6 @@ public class WaxController : MonoBehaviour
     void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
-        anim = GetComponent<Animator>();
     }
 
 
@@ -78,7 +79,7 @@ public class WaxController : MonoBehaviour
             anim.SetBool("isRunning", true);
         }
 
-        if(Input.GetButtonDown("Jump"))
+        if(Input.GetButton("Jump"))
         {
             jump = true;
         }
@@ -99,7 +100,7 @@ public class WaxController : MonoBehaviour
 
         if(isGrounded == true)
         {
-            jumpCounter = 2;
+            jumpTimeCounter = jumpTimeLimit;
             anim.SetBool("isJumping", false);
         }
         else
@@ -183,11 +184,14 @@ public class WaxController : MonoBehaviour
         }
     }
 
+
+/*
     private void Jump()
     {
         if(canJump)
         {
             anim.SetTrigger("takeOff");
+
             if (jumpCounter == 2)
             {
                 //rb.velocity = new Vector2(rb.velocity.x, jumpForce);
@@ -197,12 +201,25 @@ public class WaxController : MonoBehaviour
             else if (jumpCounter == 1)
             {
                 rb.velocity = new Vector2(rb.velocity.x, 0f); //Frena la caida
-                rb.AddForce(new Vector2(0f, jumpForce/1.1f)); //Es mas debil al primero
+                rb.AddForce(new Vector2(0f, jumpForce)); //Es mas debil al primero
                 jumpCounter--; 
             }
         }
     }
-
+*/
+    private void Jump()
+    {
+        if (jumpTimeCounter > 0)
+        {
+            rb.AddForce(new Vector2(0f, jumpForce));
+            //rb.velocity = new Vector2(rb.velocity.x, jumpForce);
+            jumpTimeCounter -= Time.deltaTime;
+        }
+        else
+        {
+            jump = false;
+        }
+    }
     private void Dash()
     {
         StartCoroutine(DashCooldown());
